@@ -30,6 +30,9 @@ public:
         //timer publisher
         timer_ = node->create_wall_timer(std::chrono::seconds(1), std::bind(&GeoParserNode::timer_callback, this));
 
+        //geogjon publisher
+        geojson_publisher = node->create_publisher<geospatial_interfaces::msg::GeoJson>("geojson", 10);
+
         // Parse GeoJSON
         try {
             geojson_msg = geojson_parser::parseGeoJson(geojson_file_path);
