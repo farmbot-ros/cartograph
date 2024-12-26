@@ -39,9 +39,8 @@ namespace geotiff_parser{
         // Also read resolution from the GeoTransform
         double geo_transform[6] = {0};
         if (dataset->GetGeoTransform(geo_transform) == CE_None) {
-            // geo_transform = [ originX, pixelSizeX, 0, originY, 0, pixelSizeY ]
             geo_tiff_msg.origin.position.x = geo_transform[0]; // top-left corner X
-            geo_tiff_msg.origin.position.y = geo_transform[3]; // top-left corner Y
+            geo_tiff_msg.origin.position.y = geo_transform[1]; // top-left corner Y
             // For simplicity, leave Z=0, orientation as identity
         }
 
@@ -53,7 +52,7 @@ namespace geotiff_parser{
         for (int b = 1; b <= band_count; ++b) {
             GDALRasterBand *gdal_band = dataset->GetRasterBand(b);
             if (!gdal_band) {
-            continue;
+                continue;
             }
 
             Band band_msg;
@@ -66,7 +65,7 @@ namespace geotiff_parser{
             double pixel_res_y = geo_transform[5];
             // If pixel_res_y is negative, make it positive for the "resolution" field
             if (pixel_res_y > 0) {
-            pixel_res_y = -pixel_res_y;
+                pixel_res_y = -pixel_res_y;
             }
             // You can choose how to interpret resolution. Here we just store the X resolution:
             grid.resolution = static_cast<float>(pixel_res_x);
@@ -81,20 +80,20 @@ namespace geotiff_parser{
             // For example, we can fetch "STATISTICS_MINIMUM", etc.
             char **metadata = gdal_band->GetMetadata();
             if (metadata) {
-            for (int i = 0; metadata[i] != nullptr; ++i) {
-                Propertie prop;
-                std::string meta_entry(metadata[i]);
-                // The format of meta_entry is KEY=VALUE
-                auto eq_pos = meta_entry.find('=');
-                if (eq_pos != std::string::npos) {
-                prop.key = meta_entry.substr(0, eq_pos);
-                prop.value = meta_entry.substr(eq_pos + 1);
-                } else {
-                prop.key = "Metadata"; // fallback
-                prop.value = meta_entry;
+                for (int i = 0; metadata[i] != nullptr; ++i) {
+                    Propertie prop;
+                    std::string meta_entry(metadata[i]);
+                    // The format of meta_entry is KEY=VALUE
+                    auto eq_pos = meta_entry.find('=');
+                    if (eq_pos != std::string::npos) {
+                        prop.key = meta_entry.substr(0, eq_pos);
+                        prop.value = meta_entry.substr(eq_pos + 1);
+                    } else {
+                        prop.key = "Metadata"; // fallback
+                        prop.value = meta_entry;
+                    }
+                    band_msg.properties.push_back(prop);
                 }
-                band_msg.properties.push_back(prop);
-            }
             }
 
             // Read the actual data as int16
@@ -103,19 +102,19 @@ namespace geotiff_parser{
             int height = gdal_band->GetYSize();
             band_msg.data.resize(width * height);
             CPLErr err = gdal_band->RasterIO(
-            GF_Read,
-            0,         // startX
-            0,         // startY
-            width,     // width
-            height,    // height
-            band_msg.data.data(), // destination buffer
-            width,
-            height,
-            GDT_Int16,
-            0, 0       // pixel and line spacing
+                GF_Read,
+                0,                      // startX
+                0,                      // startY
+                width,                  // width
+                height,                 // height
+                band_msg.data.data(),   // destination buffer
+                width,
+                height,
+                GDT_Int16,
+                0, 0                    // pixel and line spacing
             );
             if (err != CE_None) {
-            throw std::runtime_error("Failed to read raster band data.");
+                throw std::runtime_error("Failed to read raster band data.");
             }
 
             // Add this band to the GeoTiff message
