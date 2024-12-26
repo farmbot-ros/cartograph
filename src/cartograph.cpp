@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     options.allow_undeclared_parameters(true);
     options.automatically_declare_parameters_from_overrides(true);
     // Create node
-    auto main_node = std::make_shared<rclcpp::Node>("geo_parser_node", options);
+    auto main_node = std::make_shared<rclcpp::Node>("geoparser_node", options);
     // Create GeoParserNode
     auto geo_parser = std::make_shared<GeoParserNode>(main_node);
 
