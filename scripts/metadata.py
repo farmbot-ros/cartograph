@@ -6,8 +6,7 @@ file_path = "../config/wur.tiff"
 # Open the TIFF file in 'r+' mode to edit metadata
 with rasterio.open(file_path, mode='r+') as src:
     # Update global metadata
-    # src.update_tags()
-    src.update_tags(**{})
+    src.update_tags()
     # Add metadata to Band 1
     src.update_tags(1, type="path")
     # Add metadata to Band 2
@@ -38,12 +37,4 @@ with rasterio.open(file_path) as src:
     for band in range(1, src.count + 1):
         print(f"=== Band {band} Tags ===")
         print(src.tags(band))
-        print()
-
-    # Print pixel values (optional, for small datasets)
-    print("=== Pixel Values (First 5x5 Window) ===")
-    for band in range(1, src.count + 1):
-        data = src.read(band, window=((0, 5), (0, 5)))  # Adjust size as needed
-        print(f"Band {band} Values:")
-        print(data)
         print()

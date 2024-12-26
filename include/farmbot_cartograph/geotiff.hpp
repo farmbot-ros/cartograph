@@ -40,7 +40,7 @@ namespace geotiff_parser{
         double geo_transform[6] = {0};
         if (dataset->GetGeoTransform(geo_transform) == CE_None) {
             geo_tiff_msg.origin.position.x = geo_transform[0]; // top-left corner X
-            geo_tiff_msg.origin.position.y = geo_transform[1]; // top-left corner Y
+            geo_tiff_msg.origin.position.y = geo_transform[3]; // top-left corner Y
             // For simplicity, leave Z=0, orientation as identity
         }
 
