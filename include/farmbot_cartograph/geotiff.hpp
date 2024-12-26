@@ -5,16 +5,16 @@
 #include <string>
 #include <vector>
 
-#include "geospatial_interfaces/msg/geo_tiff.hpp"
-#include "geospatial_interfaces/msg/band.hpp"
-#include "geospatial_interfaces/msg/grid.hpp"
-#include "geospatial_interfaces/msg/propertie.hpp"
+#include "farmbot_interfaces/msg/geo_tiff.hpp"
+#include "farmbot_interfaces/msg/band.hpp"
+#include "farmbot_interfaces/msg/grid.hpp"
+#include "farmbot_interfaces/msg/propertie.hpp"
 
 namespace geotiff_parser{
-    using geospatial_interfaces::msg::GeoTiff;
-    using geospatial_interfaces::msg::Band;
-    using geospatial_interfaces::msg::Grid;
-    using geospatial_interfaces::msg::Propertie;
+    using farmbot_interfaces::msg::GeoTiff;
+    using farmbot_interfaces::msg::Band;
+    using farmbot_interfaces::msg::Grid;
+    using farmbot_interfaces::msg::Propertie;
 
     GeoTiff parseGeoTiff(const std::string &file_path) {
         // Register all GDAL drivers

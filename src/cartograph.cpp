@@ -1,7 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <string>
-#include "geospatial_interfaces/msg/geo_json.hpp"
-#include "geospatial_interfaces/msg/geo_tiff.hpp"
+#include "farmbot_interfaces/msg/geo_json.hpp"
+#include "farmbot_interfaces/msg/geo_tiff.hpp"
 #include "farmbot_cartograph/geojson.hpp"
 #include "farmbot_cartograph/geotiff.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
@@ -18,11 +18,11 @@ private:
 
     rclcpp::TimerBase::SharedPtr timer_;
     //geogjon publisher
-    rclcpp::Publisher<geospatial_interfaces::msg::GeoJson>::SharedPtr geojson_publisher;
-    geospatial_interfaces::msg::GeoJson geojson_msg;
+    rclcpp::Publisher<farmbot_interfaces::msg::GeoJson>::SharedPtr geojson_publisher;
+    farmbot_interfaces::msg::GeoJson geojson_msg;
     //geotiff publisher
-    rclcpp::Publisher<geospatial_interfaces::msg::GeoTiff>::SharedPtr geotiff_publisher;
-    geospatial_interfaces::msg::GeoTiff geotiff_msg;
+    rclcpp::Publisher<farmbot_interfaces::msg::GeoTiff>::SharedPtr geotiff_publisher;
+    farmbot_interfaces::msg::GeoTiff geotiff_msg;
 
 public:
     GeoParserNode(const rclcpp::Node::SharedPtr &node) : node(node) {
@@ -34,7 +34,7 @@ public:
         timer_ = node->create_wall_timer(std::chrono::seconds(1), std::bind(&GeoParserNode::timer_callback, this));
 
         // GeoJSON
-        geojson_publisher = node->create_publisher<geospatial_interfaces::msg::GeoJson>("geojson", 10);
+        geojson_publisher = node->create_publisher<farmbot_interfaces::msg::GeoJson>("geojson", 10);
         try {
             geojson_msg = geojson_parser::parseGeoJson(geojson_file_path);
             RCLCPP_INFO(node->get_logger(), "Parsed GeoJSON with %d features", geojson_msg.num_features);
@@ -43,7 +43,7 @@ public:
         }
 
         // /GeoTIFF
-        geotiff_publisher = node->create_publisher<geospatial_interfaces::msg::GeoTiff>("geotiff", 10);
+        geotiff_publisher = node->create_publisher<farmbot_interfaces::msg::GeoTiff>("geotiff", 10);
         try {
             geotiff_msg = geotiff_parser::parseGeoTiff(geotiff_file_path);
             RCLCPP_INFO(node->get_logger(), "Parsed GeoTIFF with %d band(s)", geotiff_msg.num_bands);

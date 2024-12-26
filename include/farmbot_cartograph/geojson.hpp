@@ -6,20 +6,20 @@
 #include <string>
 #include <vector>
 
-#include "geospatial_interfaces/msg/geo_json.hpp"
-#include "geospatial_interfaces/msg/feature.hpp"
-#include "geospatial_interfaces/msg/geometry.hpp"
-#include "geospatial_interfaces/msg/cordinates.hpp"
-#include "geospatial_interfaces/msg/cordinate.hpp"
-#include "geospatial_interfaces/msg/propertie.hpp"
+#include "farmbot_interfaces/msg/geo_json.hpp"
+#include "farmbot_interfaces/msg/feature.hpp"
+#include "farmbot_interfaces/msg/geometry.hpp"
+#include "farmbot_interfaces/msg/cordinates.hpp"
+#include "farmbot_interfaces/msg/cordinate.hpp"
+#include "farmbot_interfaces/msg/propertie.hpp"
 
 namespace geojson_parser{
-    using geospatial_interfaces::msg::GeoJson;
-    using geospatial_interfaces::msg::Feature;
-    using geospatial_interfaces::msg::Geometry;
-    using geospatial_interfaces::msg::Cordinates;
-    using geospatial_interfaces::msg::Cordinate;
-    using geospatial_interfaces::msg::Propertie;
+    using farmbot_interfaces::msg::GeoJson;
+    using farmbot_interfaces::msg::Feature;
+    using farmbot_interfaces::msg::Geometry;
+    using farmbot_interfaces::msg::Cordinates;
+    using farmbot_interfaces::msg::Cordinate;
+    using farmbot_interfaces::msg::Propertie;
 
     static std::vector<Propertie> readProperties(OGRFeature* feature){
         std::vector<Propertie> properties;

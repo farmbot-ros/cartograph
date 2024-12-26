@@ -46,7 +46,6 @@ find_package(pcl_conversions REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(farmbot_interfaces REQUIRED)
-find_package(geospatial_interfaces REQUIRED)
 
 
 
@@ -66,7 +65,6 @@ set(dependencies_ros
     diagnostic_msgs
     diagnostic_updater
     farmbot_interfaces
-    geospatial_interfaces
 )
 
 
@@ -82,7 +80,6 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 find_package(nlohmann_json REQUIRED)
 find_package(GDAL REQUIRED)
-#find curl
 
 
 set(dependencies_sys
