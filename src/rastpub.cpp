@@ -27,7 +27,7 @@ private:
     farmbot_interfaces::msg::GeoJson geojson_enu_;
 
 public:
-    GeoPolygonTimerNode() : Node("geo_polygon_timer_node") {
+    GeoPolygonTimerNode() : Node("vectpub") {
         geojson_sub_ = this->create_subscription<farmbot_interfaces::msg::GeoJson>("/map/geojson", 10,
             [this](const farmbot_interfaces::msg::GeoJson::SharedPtr msg) {
                 geojson_gnss_ = *msg;
@@ -45,8 +45,6 @@ private:
         if (!trying_to_convert_) {
             trying_to_convert_ = true;
             RCLCPP_INFO(this->get_logger(), "Starting GPS to ENU conversion.");
-            // nav_to_enu(geojson_gnss_);
-            //put in a thread
             std::thread(&GeoPolygonTimerNode::nav_to_enu, this, geojson_gnss_).detach();
         }
         if (converted_) {

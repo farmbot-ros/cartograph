@@ -28,7 +28,8 @@ install(
 
 set(executables
     cartograph
-    zonepub
+    vectpub
+    rastpub
 )
 
 find_package(ament_cmake REQUIRED)

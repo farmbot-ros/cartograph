@@ -43,7 +43,7 @@ public:
         }
 
         // /GeoTIFF
-        geotiff_publisher = node->create_publisher<farmbot_interfaces::msg::GeoTiff>("geotiff", 10);
+        geotiff_publisher = node->create_publisher<farmbot_interfaces::msg::GeoTiff>("/map/geotiff", 10);
         try {
             geotiff_msg = geotiff_parser::parseGeoTiff(geotiff_file_path);
             RCLCPP_INFO(node->get_logger(), "Parsed GeoTIFF with %d band(s)", geotiff_msg.num_bands);
