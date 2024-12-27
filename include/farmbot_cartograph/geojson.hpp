@@ -131,8 +131,8 @@ namespace geojson_parser{
             char* pszWkt = nullptr;
             layer->GetSpatialRef()->exportToWkt(&pszWkt);
             if (pszWkt) {
-            geo_json_msg.projection = pszWkt;
-            CPLFree(pszWkt);
+                geo_json_msg.projection = pszWkt;
+                CPLFree(pszWkt);
             }
         }
 
@@ -142,10 +142,16 @@ namespace geojson_parser{
             Feature feature_msg;
             OGRGeometry* geom = poFeature->GetGeometryRef();
             if (geom) {
-            feature_msg.geometry = convertOGRGeometry(geom);
+                feature_msg.geometry = convertOGRGeometry(geom);
             }
             feature_msg.properties = readProperties(poFeature);
             geo_json_msg.features.push_back(feature_msg);
+            //loop each property
+            for(auto prop : feature_msg.properties){
+                if(prop.key == "uuid"){
+                    feature_msg.uuid = prop.value;
+                }
+            }
             OGRFeature::DestroyFeature(poFeature);
         }
         geo_json_msg.num_features = geo_json_msg.features.size();

@@ -97,8 +97,8 @@ private:
             auto request = std::make_shared<farmbot_interfaces::srv::Gps2Enu::Request>();
             for (auto &point : navpts[i].points) {
                 sensor_msgs::msg::NavSatFix gps_point;
-                gps_point.latitude = point.x;
-                gps_point.longitude = point.y;
+                gps_point.latitude = point.y;
+                gps_point.longitude = point.x;
                 gps_point.altitude = point.z;
                 request->gps.push_back(gps_point);
             }
