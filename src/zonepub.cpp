@@ -1,3 +1,4 @@
+#include <farmbot_interfaces/msg/detail/geo_json__struct.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/polygon.hpp>
 #include "farmbot_interfaces/msg/geo_json.hpp"
@@ -17,118 +18,85 @@ private:
     rclcpp::Subscription<farmbot_interfaces::msg::GeoJson>::SharedPtr geojson_sub_;
     rclcpp::TimerBase::SharedPtr timer_;
     bool trying_to_convert_ = false;
-
-    std::vector<geometry_msgs::msg::Polygon> polygons_enu_;
-    std::vector<geometry_msgs::msg::Polygon> polygons_gnss_;
-    std::vector<rclcpp::Publisher<geometry_msgs::msg::Polygon>::SharedPtr> polygon_publishers_;
+    bool converted_ = false;
 
     rclcpp::Client<farmbot_interfaces::srv::Gps2Enu>::SharedPtr gps2enu_client_;
+    rclcpp::Publisher<farmbot_interfaces::msg::GeoJson>::SharedPtr geojson_enu_pub_;
+
+    farmbot_interfaces::msg::GeoJson geojson_gnss_;
+    farmbot_interfaces::msg::GeoJson geojson_enu_;
 
 public:
     GeoPolygonTimerNode() : Node("geo_polygon_timer_node") {
-        geojson_sub_ = this->create_subscription<farmbot_interfaces::msg::GeoJson>(
-            "geojson",
-            10,
-            std::bind(&GeoPolygonTimerNode::geoJsonCallback, this, std::placeholders::_1)
-        );
+        geojson_sub_ = this->create_subscription<farmbot_interfaces::msg::GeoJson>("/map/geojson", 10,
+            [this](const farmbot_interfaces::msg::GeoJson::SharedPtr msg) {
+                geojson_gnss_ = *msg;
+            });
 
-        gps2enu_client_ = this->create_client<farmbot_interfaces::srv::Gps2Enu>(
-            "loc/gps2enu",
-            rmw_qos_profile_services_default
-        );
+        gps2enu_client_ = this->create_client<farmbot_interfaces::srv::Gps2Enu>("loc/gps2enu");
+        geojson_enu_pub_ = this->create_publisher<farmbot_interfaces::msg::GeoJson>("/map/geojson/enu", 10);
 
         timer_ = this->create_wall_timer(
-            std::chrono::seconds(1),
-            std::bind(&GeoPolygonTimerNode::timerCallback, this)
-        );
+            1s, std::bind(&GeoPolygonTimerNode::timerCallback, this));
     }
 
 private:
-    void geoJsonCallback(const farmbot_interfaces::msg::GeoJson::SharedPtr msg) {
-        polygon_publishers_.clear();
-        polygons_gnss_.clear();
-
-        size_t polygon_index = 0;
-        for (const auto &feature : msg->features) {
-            if (feature.geometry.type == farmbot_interfaces::msg::Geometry::POLYGON) {
-                geometry_msgs::msg::Polygon polygon_msg;
-                for (const auto &coord : feature.geometry.cordinates.points) {
-                    geometry_msgs::msg::Point32 pt;
-                    pt.x = static_cast<float>(coord.x);
-                    pt.y = static_cast<float>(coord.y);
-                    pt.z = static_cast<float>(coord.z);
-                    polygon_msg.points.push_back(pt);
-                }
-                std::string topic_name = "polygon_" + std::to_string(polygon_index);
-                auto pub = this->create_publisher<geometry_msgs::msg::Polygon>(topic_name, 10);
-                polygon_publishers_.push_back(pub);
-                polygons_gnss_.push_back(polygon_msg);
-                polygon_index++;
-            }
-        }
-        geojson_sub_.reset();
-    }
-
     void timerCallback() {
-        // Only kick off nav_to_enu once after we get polygons from GeoJSON.
         if (!trying_to_convert_) {
             trying_to_convert_ = true;
-            nav_to_enu(polygons_gnss_);
+            RCLCPP_INFO(this->get_logger(), "Starting GPS to ENU conversion.");
+            // nav_to_enu(geojson_gnss_);
+            //put in a thread
+            std::thread(&GeoPolygonTimerNode::nav_to_enu, this, geojson_gnss_).detach();
         }
-
-        // Publish what we have in polygons_enu_.
-        for (size_t i = 0; i < polygons_enu_.size(); i++) {
-            polygon_publishers_[i]->publish(polygons_enu_[i]);
+        if (converted_) {
+            geojson_enu_pub_->publish(geojson_enu_);
         }
     }
 
-    // Send each polygon to the service asynchronously.
-    void nav_to_enu(const std::vector<geometry_msgs::msg::Polygon>& navpts) {
+    void nav_to_enu(const farmbot_interfaces::msg::GeoJson& geojson) {
         if (!gps2enu_client_->service_is_ready()) {
             RCLCPP_WARN(this->get_logger(), "GPS2ENU service not ready.");
             trying_to_convert_ = false;
             return;
         }
-
-        // Prepare the ENU polygons vector to match size
-        polygons_enu_.resize(navpts.size());
-
-        for (size_t i = 0; i < navpts.size(); i++) {
+        geojson_enu_ = geojson_gnss_;
+        for (size_t i = 0; i < geojson.features.size(); ++i) {
+            const auto& feature = geojson.features[i];
             auto request = std::make_shared<farmbot_interfaces::srv::Gps2Enu::Request>();
-            for (auto &point : navpts[i].points) {
+
+            for (const auto& cord : feature.geometry.cordinates.points) {
                 sensor_msgs::msg::NavSatFix gps_point;
-                gps_point.latitude = point.y;
-                gps_point.longitude = point.x;
-                gps_point.altitude = point.z;
+                gps_point.latitude = cord.y;
+                gps_point.longitude = cord.x;
+                gps_point.altitude = cord.z;
                 request->gps.push_back(gps_point);
             }
+            echo::info("Sending request to GPS2ENU service.");
 
-            // For each polygon, we send a separate request; the callback updates polygons_enu_ at index i.
-            auto response_callback =
-                [this, i](rclcpp::Client<farmbot_interfaces::srv::Gps2Enu>::SharedFuture future) {
-                    auto result = future.get();
-                    if (!result) {
-                        RCLCPP_ERROR(this->get_logger(), "GPS2ENU service call failed.");
-                        return;
-                    }
-                    geometry_msgs::msg::Polygon enu_polygon;
-                    for (auto &point : result->enu) {
-                        geometry_msgs::msg::Point32 enu_point;
-                        enu_point.x = point.position.x;
-                        enu_point.y = point.position.y;
-                        enu_point.z = point.position.z;
-                        enu_polygon.points.push_back(enu_point);
-                    }
-                    polygons_enu_[i] = enu_polygon;
+            gps2enu_client_->async_send_request(request,
+                [this, i, geojson](rclcpp::Client<farmbot_interfaces::srv::Gps2Enu>::SharedFuture future) {
+                    try {
+                        auto result = future.get();
+                        geojson_enu_.features[i].geometry.cordinates.points.clear();
 
-                    // If this is the last polygon to get updated, we can reset trying_to_convert_.
-                    // (Alternatively, you could count how many are completed, etc.)
-                    if (i == polygons_enu_.size() - 1) {
-                        echo::info("All polygons converted to ENU.");
-                    }
-                };
+                        for (const auto& point : result->enu) {
+                            farmbot_interfaces::msg::Cordinate enu_cord;
+                            enu_cord.x = point.position.x;
+                            enu_cord.y = point.position.y;
+                            enu_cord.z = point.position.z;
+                            geojson_enu_.features[i].geometry.cordinates.points.push_back(enu_cord);
+                        }
 
-            gps2enu_client_->async_send_request(request, response_callback);
+                        if (i == geojson.features.size() - 1) {
+                            RCLCPP_INFO(this->get_logger(), "All polygons converted to ENU.");
+                            converted_ = true;
+                        }
+                    } catch (const std::exception& e) {
+                        RCLCPP_ERROR(this->get_logger(), "Service call failed: %s", e.what());
+                    }
+                }
+            );
         }
     }
 };

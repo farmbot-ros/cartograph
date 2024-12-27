@@ -34,7 +34,7 @@ public:
         timer_ = node->create_wall_timer(std::chrono::seconds(1), std::bind(&GeoParserNode::timer_callback, this));
 
         // GeoJSON
-        geojson_publisher = node->create_publisher<farmbot_interfaces::msg::GeoJson>("geojson", 10);
+        geojson_publisher = node->create_publisher<farmbot_interfaces::msg::GeoJson>("/map/geojson", 10);
         try {
             geojson_msg = geojson_parser::parseGeoJson(geojson_file_path);
             RCLCPP_INFO(node->get_logger(), "Parsed GeoJSON with %d features", geojson_msg.num_features);
