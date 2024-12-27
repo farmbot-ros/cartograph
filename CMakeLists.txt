@@ -28,6 +28,7 @@ install(
 
 set(executables
     cartograph
+    zonepub
 )
 
 find_package(ament_cmake REQUIRED)
