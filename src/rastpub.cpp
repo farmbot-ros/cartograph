@@ -6,7 +6,7 @@
 
 using namespace std::chrono_literals;
 
-class GeoPolygonTimerNode : public rclcpp::Node {
+class RastPub : public rclcpp::Node {
   private:
     rclcpp::Subscription<farmbot_interfaces::msg::GeoTiff>::SharedPtr geotiff_sub_;
     rclcpp::TimerBase::SharedPtr timer_;
@@ -18,14 +18,14 @@ class GeoPolygonTimerNode : public rclcpp::Node {
     farmbot_interfaces::msg::GeoTiff geotiff_enu_;
 
   public:
-    GeoPolygonTimerNode() : Node("vectpub") { ; }
+    RastPub() : Node("rastpub") { ; }
 
   private:
 };
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<GeoPolygonTimerNode>();
+    auto node = std::make_shared<RastPub>();
     rclcpp::executors::MultiThreadedExecutor executor;
     executor.add_node(node);
     executor.spin();

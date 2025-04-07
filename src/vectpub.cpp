@@ -11,7 +11,7 @@
 
 using namespace std::chrono_literals;
 
-class GeoPolygonTimerNode : public rclcpp::Node {
+class VectPub : public rclcpp::Node {
   private:
     rclcpp::Subscription<farmbot_interfaces::msg::GeoJson>::SharedPtr geojson_sub_;
     rclcpp::TimerBase::SharedPtr timer_;
@@ -25,7 +25,7 @@ class GeoPolygonTimerNode : public rclcpp::Node {
     farmbot_interfaces::msg::GeoJson geojson_enu_;
 
   public:
-    GeoPolygonTimerNode() : Node("vectpub") {
+    VectPub() : Node("vectpub") {
         geojson_sub_ = this->create_subscription<farmbot_interfaces::msg::GeoJson>(
             "/map/geojson", 10,
             [this](const farmbot_interfaces::msg::GeoJson::SharedPtr msg) { geojson_gnss_ = *msg; });
@@ -33,7 +33,7 @@ class GeoPolygonTimerNode : public rclcpp::Node {
         gps2enu_client_ = this->create_client<farmbot_interfaces::srv::Gps2Enu>("loc/gps2enu");
         geojson_enu_pub_ = this->create_publisher<farmbot_interfaces::msg::GeoJson>("/map/geojson/enu", 10);
 
-        timer_ = this->create_wall_timer(1s, std::bind(&GeoPolygonTimerNode::timerCallback, this));
+        timer_ = this->create_wall_timer(1s, std::bind(&VectPub::timerCallback, this));
     }
 
   private:
@@ -41,7 +41,7 @@ class GeoPolygonTimerNode : public rclcpp::Node {
         if (!trying_to_convert_) {
             trying_to_convert_ = true;
             RCLCPP_INFO(this->get_logger(), "Starting GPS to ENU conversion.");
-            std::thread(&GeoPolygonTimerNode::nav_to_enu, this, geojson_gnss_).detach();
+            std::thread(&VectPub::nav_to_enu, this, geojson_gnss_).detach();
         }
         if (converted_) {
             geojson_enu_pub_->publish(geojson_enu_);
@@ -96,7 +96,7 @@ class GeoPolygonTimerNode : public rclcpp::Node {
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<GeoPolygonTimerNode>();
+    auto node = std::make_shared<VectPub>();
     rclcpp::executors::MultiThreadedExecutor executor;
     executor.add_node(node);
     executor.spin();
