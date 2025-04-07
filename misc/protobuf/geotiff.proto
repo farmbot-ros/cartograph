@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package farmbot_interfaces;
+
+import "google/protobuf/timestamp.proto"; // For Timestamp used in Header.
+
+// Minimal version of std_msgs/Header.
+message Header {
+  uint32 seq = 1;
+  google.protobuf.Timestamp stamp = 2;
+  string frame_id = 3;
+}
+
+// Minimal version of geometry_msgs/Pose.
+message Pose {
+  Point position = 1;
+  Quaternion orientation = 2;
+}
+
+message Point {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Quaternion {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double w = 4;
+}
+
+// --- Child messages for GeoTiff ---
+
+message Grid {
+  float resolution = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+}
+
+message Propertie {
+  string key = 1;
+  string value = 2;
+}
+
+message Band {
+  // A band may contain multiple grids.
+  repeated Grid grid = 1;
+  repeated Propertie properties = 2;
+  // ROS used int16[] for data. Protobuf has no int16, so we use int32.
+  repeated int32 data = 3;
+}
+
+// --- Top-level GeoTiff message ---
+
+message GeoTiff {
+  Header header = 1;
+  string projection = 2;
+  Pose origin = 3;
+  int32 num_bands = 4;  // May be redundant with the repeated field length.
+  repeated Band bands = 5;
+}
+

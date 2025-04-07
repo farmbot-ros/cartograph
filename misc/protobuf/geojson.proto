@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package farmbot_interfaces;
+
+// Minimal version of std_msgs/Header.
+message Header {
+  uint32 seq = 1;
+  // Using google.protobuf.Timestamp for a time stamp.
+  // (Requires: import "google/protobuf/timestamp.proto"; in your build.)
+  // Alternatively, define your own Timestamp message.
+  google.protobuf.Timestamp stamp = 2;
+  string frame_id = 3;
+}
+
+// Minimal version of geometry_msgs/Pose.
+message Pose {
+  Point position = 1;
+  Quaternion orientation = 2;
+}
+
+message Point {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Quaternion {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double w = 4;
+}
+
+// --- Child messages for GeoJson ---
+
+message Cordinate {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Cordinates {
+  repeated Cordinate points = 1;
+}
+
+message Propertie {
+  string key = 1;
+  string value = 2;
+}
+
+message Geometry {
+  // Representing the constants as an enum.
+  enum GeometryType {
+    POINT = 0;
+    LINESTRING = 1;
+    POLYGON = 2;
+  }
+  GeometryType type = 1;
+  Cordinates cordinates = 2;
+}
+
+message Feature {
+  Geometry geometry = 1;
+  repeated Propertie properties = 2;
+  string uuid = 3;
+}
+
+// --- Top-level GeoJson message ---
+
+message GeoJson {
+  Header header = 1;
+  string projection = 2;
+  Pose origin = 3;
+  int32 num_features = 4;  // May be redundant with the repeated field length.
+  repeated Feature features = 5;
+}
+

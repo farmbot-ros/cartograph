@@ -12,14 +12,17 @@ img_obstacle_pil = Image.open("obstacle.png").convert("L")
 # Convert pil images to numpy arrays
 img_path = np.array(img_path_pil)
 img_obstacle = np.array(img_obstacle_pil)
-assert img_path.shape == img_obstacle.shape, "Input images must have the same dimensions"
+assert (
+    img_path.shape == img_obstacle.shape
+), "Input images must have the same dimensions"
 
 transform = from_origin(-10, -10, 1, 1)
 crs = rasterio.crs.CRS.from_epsg(4326)
 
 # Create a new raster file with the same dimensions as the input images and two bands
 with rasterio.open(
-    "output.tiff", "w",
+    "output.tiff",
+    "w",
     driver="GTiff",
     width=img_path.shape[1],
     height=img_path.shape[0],
