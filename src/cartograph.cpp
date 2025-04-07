@@ -1,35 +1,34 @@
-#include <rclcpp/rclcpp.hpp>
-#include <string>
-#include "farmbot_interfaces/msg/geo_json.hpp"
-#include "farmbot_interfaces/msg/geo_tiff.hpp"
 #include "farmbot_cartograph/geojson.hpp"
 #include "farmbot_cartograph/geotiff.hpp"
-#include "ament_index_cpp/get_package_share_directory.hpp"
+#include "farmbot_interfaces/msg/geo_json.hpp"
+#include "farmbot_interfaces/msg/geo_tiff.hpp"
+#include <rclcpp/rclcpp.hpp>
 #include <spdlog/spdlog.h>
+#include <string>
 namespace echo = spdlog;
 
 class GeoParserNode {
-private:
+  private:
     rclcpp::Node::SharedPtr node;
     std::string geojson_file_path;
     std::string geotiff_file_path;
     bool inited = false;
 
     rclcpp::TimerBase::SharedPtr timer_;
-    //geogjon publisher
+    // geogjon publisher
     rclcpp::Publisher<farmbot_interfaces::msg::GeoJson>::SharedPtr geojson_publisher;
     farmbot_interfaces::msg::GeoJson geojson_msg;
-    //geotiff publisher
+    // geotiff publisher
     rclcpp::Publisher<farmbot_interfaces::msg::GeoTiff>::SharedPtr geotiff_publisher;
     farmbot_interfaces::msg::GeoTiff geotiff_msg;
 
-public:
+  public:
     GeoParserNode(const rclcpp::Node::SharedPtr &node) : node(node) {
-        std::string package_share_directory = ament_index_cpp::get_package_share_directory("farmbot_cartograph");
-        geojson_file_path = package_share_directory + "/config/wur.json";
-        geotiff_file_path = package_share_directory + "/config/wur.tiff";
 
-        //timer publisher
+        geojson_file_path = node->get_parameter_or<std::string>("geojson_file_path", "./wur.json");
+        geotiff_file_path = node->get_parameter_or<std::string>("geotiff_file_path", "./wur.tiff");
+
+        // timer publisher
         timer_ = node->create_wall_timer(std::chrono::seconds(1), std::bind(&GeoParserNode::timer_callback, this));
 
         // GeoJSON
@@ -55,7 +54,9 @@ public:
     }
 
     void timer_callback() {
-        if (!inited) { return; }
+        if (!inited) {
+            return;
+        }
         geojson_publisher->publish(geojson_msg);
         geotiff_publisher->publish(geotiff_msg);
         echo::info("Published GeoJSON and GeoTIFF");
@@ -64,7 +65,7 @@ public:
 
 int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
-    //node options
+    // node options
     rclcpp::NodeOptions options;
     options.allow_undeclared_parameters(true);
     options.automatically_declare_parameters_from_overrides(true);
